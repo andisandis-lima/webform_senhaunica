@@ -10,31 +10,25 @@ use Drupal\Core\Controller\ControllerBase;
  * Returns responses for Webform Senha Única routes.
  */
 final class WebformSenhaunicaController extends ControllerBase {
+    public function __invoke(): array {
+        // die('To aqui galera');
 
-  /**
-   * Builds the response.
-   */
-  public function __invoke(): array {
+        $user = Uspdev\Senhaunica\Senhaunica::getUserDetail();
 
-    die('To aqui galera');
+        $data = $webform_submission->getData();
 
-    $user = Uspdev\Senhaunica\Senhaunica::getUserDetail();
+        $data['wsuserid']     = 12345;
+        $data['loginUsuario'] = 'usuario_teste';
+        $data['nomeUsuario']  = 'Nome de Exemplo';
 
-    $data = $webform_submission->getData();
-    
-    $data['wsuserid'] = 12345;
-    $data['loginUsuario'] = 'usuario_teste';
-    $data['nomeUsuario'] = 'Nome de Exemplo';
+        $webform_submission->setData($data);
+        $webform_submission->save();
 
-    $webform_submission->setData($data);
-    $webform_submission->save();
+        $build['content'] = [
+            '#type' => 'item',
+            '#markup' => $this->t('It works!'),
+        ];
 
-    $build['content'] = [
-      '#type' => 'item',
-      '#markup' => $this->t('It works!'),
-    ];
-
-    return $build;
-  }
-
+        return $build;
+    }
 }
