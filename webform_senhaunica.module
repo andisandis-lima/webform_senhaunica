@@ -16,7 +16,7 @@ function webform_senhaunica_webform_third_party_settings_form_alter(array &$form
 
     $form['third_party_settings']['webform_senhaunica'] = [
         '#type' => 'details',
-        '#title' => t('Universidade de São Paulo'),
+        '#title' => t('Universidade de São Paulo - Senha Única'),
         '#open' => FALSE,
     ];
 
