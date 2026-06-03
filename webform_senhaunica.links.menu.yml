@@ -1,0 +1,7 @@
+webform_senhaunica.settings:
+  title: 'Webform'
+  description: 'Configurações do módulo Webform Senha Única'
+  parent: system.admin_config_system
+  route_name: /admin/config/webform_senhaunica/settings
+  weight: 10
+

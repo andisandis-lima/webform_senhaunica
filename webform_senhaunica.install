@@ -1,0 +1,60 @@
+<?php
+
+function webform_senhaunica_schema() {
+  $schema['webform_senhaunica'] = [
+    'description' => 'Tabela de usuários autenticados',
+    'fields' => [
+      'id' => [
+        'type' => 'serial',
+        'not null' => TRUE,
+      ],
+      'numero_usp' => [
+        'type' => 'varchar',
+        'length' => 50,
+      ],
+      'nome_usuario' => [
+        'type' => 'varchar',
+        'length' => 255,
+      ],
+      'email' => [
+        'type' => 'varchar',
+        'length' => 255,
+      ],
+      'hash' => [
+        'type' => 'varchar',
+        'length' => 255,
+      ],
+      'id_formulario' => [
+        'type' => 'varchar',
+        'length' => 255,
+      ],
+      'created' => [
+        'type' => 'int',
+        'not null' => TRUE,
+      ],
+    ],
+    'primary key' => ['id'],
+    'indexes' => [
+      'numero_usp' => ['numero_usp'],
+      'hash' => ['hash'],
+    ],
+  ];
+
+  return $schema;
+}
+
+/**
+ * Cria a tabela para instalações já existentes.
+ */
+function webform_senhaunica_update_9001() {
+  $schema = \Drupal::database()->schema();
+
+  if (!$schema->tableExists('webform_senhaunica')) {
+    $tables = webform_senhaunica_schema();
+
+    $schema->createTable(
+      'webform_senhaunica',
+      $tables['webform_senhaunica']
+    );
+  }
+}

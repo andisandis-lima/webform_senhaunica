@@ -25,38 +25,16 @@ function webform_senhaunica_webform_third_party_settings_form_alter(array &$form
         '#title' => t('Habilitar senha única'),
         '#default_value' => $webform->getThirdPartySetting('webform_senhaunica', 'habilitar_senhaunica', FALSE),
     ];
-
     $form['third_party_settings']['webform_senhaunica']['identifier'] = [
-        '#type' => 'textfield',
-        '#title' => t('Identificador'),
-        '#default_value' => $webform->getThirdPartySetting('webform_senhaunica', 'identifier'),
-        '#states' => [
-            'visible' => [
-                ':input[name="third_party_settings[webform_senhaunica][habilitar_senhaunica]"]' => ['checked' => TRUE],
-            ],
-        ],
+    '#type' => 'textfield',
+    '#title' => t('Identifier'),
+    '#default_value' => $webform->getThirdPartySetting('webform_senhaunica', 'identifier'),
     ];
 
     $form['third_party_settings']['webform_senhaunica']['secret'] = [
-        '#type' => 'textfield',
-        '#title' => t('Secret'),
-        '#default_value' => $webform->getThirdPartySetting('webform_senhaunica', 'secret'),
-        '#states' => [
-            'visible' => [
-                ':input[name="third_party_settings[webform_senhaunica][habilitar_senhaunica]"]' => ['checked' => TRUE],
-            ],
-        ],
-    ];
-
-    $form['third_party_settings']['webform_senhaunica']['callback_id'] = [
-        '#type' => 'textfield',
-        '#title' => t('Callback ID'),
-        '#default_value' => $webform->getThirdPartySetting('webform_senhaunica', 'callback_id'),
-        '#states' => [
-            'visible' => [
-                ':input[name="third_party_settings[webform_senhaunica][habilitar_senhaunica]"]' => ['checked' => TRUE],
-            ],
-        ],
+    '#type' => 'textfield',
+    '#title' => t('Secret'),
+    '#default_value' => $webform->getThirdPartySetting('webform_senhaunica', 'secret'),
     ];
 }
 
@@ -72,8 +50,9 @@ function webform_senhaunica_webform_access(\Drupal\webform\WebformInterface $web
             'callback_id' => $webform->getThirdPartySetting('webform_senhaunica', 'callback_id')
         ];
 
-        Senhaunica::login($clientCredentials);
-    }
+    \Drupal::logger('webform_senhaunica')->notice('<pre>@data</pre>', [
+    '@data' => print_r($clientCredentials, TRUE),
+    ]);    }
 }
 
 /**

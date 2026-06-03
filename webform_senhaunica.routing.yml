@@ -5,3 +5,19 @@ webform_senhaunica.callback:
     _controller: '\Drupal\webform_senhaunica\Controller\WebformSenhaunicaController'
   requirements:
     _permission: 'access content'
+
+/admin/config/webform_senhaunica/settings:
+  path: '/admin/config/system/settings'
+  defaults:
+    _title: 'Settings'
+    _form: 'Drupal\webform_senhaunica\Form\SettingsForm'
+  requirements:
+    _permission: 'administer site configuration'
+
+webform_senhaunica.anderson:
+  path: '/anderson'
+  defaults:
+    _title: 'Anderson'
+    _controller: '\Drupal\webform_senhaunica\Controller\Anderson'
+  requirements:
+    _permission: 'access content'

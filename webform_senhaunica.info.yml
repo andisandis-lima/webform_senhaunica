@@ -2,4 +2,4 @@ name: 'Webform Senha Única'
 type: module
 description: 'Webform Senha Única'
 core_version_requirement: ^10.3 || ^11.0
-package: 'Universidade de São Paulo'
+package: 'Universidade de Sao Paulo'
