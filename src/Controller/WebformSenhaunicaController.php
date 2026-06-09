@@ -7,8 +7,11 @@ namespace Drupal\webform_senhaunica\Controller;
 use Drupal\Core\Controller\ControllerBase;
 use Uspdev\Senhaunica\Senhaunica;
 use Drupal\Core\Database\Database;
+use Symfony\Component\HttpFoundation\Response;
 
 use Symfony\Component\HttpFoundation\RedirectResponse;
+
+
 
 /**
  * Returns responses for Webform Senha Única routes.
@@ -16,36 +19,27 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 final class WebformSenhaunicaController extends ControllerBase {
     public function __invoke(): array {
 
-    //$config = $this->config('webform_senhaunica.settings');
-
-
-  $clientCredentials = [
-    'identifier' => 'identificacao',
-    'secret' => 'chave-secreta',
-    'callback_id' => 0,
-  ];
-
-  Senhaunica::login($clientCredentials);
-
+  Senhaunica::login();
   $user = Senhaunica::getUserDetail();
 
-  
+  $connection = Database::getConnection();
 
-  Database::getConnection()
-    ->insert('webform_senhaunica')
-    ->fields([
-      'numero_usp' => $user['loginUsuario'],
-      'nome_usuario' => $user['nomeUsuario'],
-      'email' => ($user['emailPrincipalUsuario'] ?? '')
+  $connection->insert('webform_senhaunica')
+  ->fields([
+    'numero_usp' => $user['loginUsuario'],
+    'nome_usuario' => $user['nomeUsuario'],
+    'email' => ($user['emailPrincipalUsuario'] ?? '')
         ?: ($user['emailAlternativoUsuario'] ?? '')
         ?: ($user['emailUspUsuario'] ?? ''),
-      'hash' => $user['wsuserid'],
-      'created' => time(),
-    ])
-    ->execute();
+    'hash' => $user['wsuserid'],
+    'created' => time(),
+  ])
+  ->execute();
 
   return [
-    '#markup' => 'Login realizado com sucesso',
-  ];
+  '#markup' => 'Login realizado com sucesso',
+  '#cache' => ['max-age' => 0],
+];
+  
 }
 }
