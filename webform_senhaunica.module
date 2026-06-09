@@ -25,17 +25,6 @@ function webform_senhaunica_webform_third_party_settings_form_alter(array &$form
         '#title' => t('Habilitar senha única'),
         '#default_value' => $webform->getThirdPartySetting('webform_senhaunica', 'habilitar_senhaunica', FALSE),
     ];
-    $form['third_party_settings']['webform_senhaunica']['identifier'] = [
-    '#type' => 'textfield',
-    '#title' => t('Identifier'),
-    '#default_value' => $webform->getThirdPartySetting('webform_senhaunica', 'identifier'),
-    ];
-
-    $form['third_party_settings']['webform_senhaunica']['secret'] = [
-    '#type' => 'textfield',
-    '#title' => t('Secret'),
-    '#default_value' => $webform->getThirdPartySetting('webform_senhaunica', 'secret'),
-    ];
 }
 
 function webform_senhaunica_webform_access(\Drupal\webform\WebformInterface $webform, $operation, \Drupal\Core\Session\AccountInterface $account) {
