@@ -20,10 +20,27 @@ final class WebformSenhaunicaController extends ControllerBase {
     public function __invoke(): array {
 
   Senhaunica::login();
+
+  $session = \Drupal::request()->getSession();
+
+  $session->set('senhaunica_autenticado', TRUE);
+
+  $webform_id = $session->get('senhaunica_webform_id');
+
+  $destino = $session->get('senhaunica_destino');
+
+  if ($destino) {
+
+    $session->remove('senhaunica_destino');
+    $session->remove('senhaunica_webform_id');
+
+    return new RedirectResponse($destino);
+  }
+
   $user = Senhaunica::getUserDetail();
-
+   
   $connection = Database::getConnection();
-
+  
   $connection->insert('webform_senhaunica')
   ->fields([
     'numero_usp' => $user['loginUsuario'],
@@ -32,6 +49,7 @@ final class WebformSenhaunicaController extends ControllerBase {
         ?: ($user['emailAlternativoUsuario'] ?? '')
         ?: ($user['emailUspUsuario'] ?? ''),
     'hash' => $user['wsuserid'],
+    'webform_id' => $session->get('senhaunica_webform_id'),
     'created' => time(),
   ])
   ->execute();
@@ -40,6 +58,8 @@ final class WebformSenhaunicaController extends ControllerBase {
   '#markup' => 'Login realizado com sucesso',
   '#cache' => ['max-age' => 0],
 ];
-  
+   }
 }
-}
+
+
+

@@ -84,6 +84,10 @@ final class SettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
  public function submitForm(array &$form, FormStateInterface $form_state): void {
+
+ \Drupal::logger('webform_senhaunica')
+    ->notice('submitForm executado');
+    
   $this->config('webform_senhaunica.settings')
     ->set('identifier', $form_state->getValue('identifier'))
     ->set('secret', $form_state->getValue('secret'))

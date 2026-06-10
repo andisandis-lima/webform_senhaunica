@@ -1,0 +1,8 @@
+services:
+  webform_senhaunica.webform_access_subscriber:
+    class: Drupal\webform_senhaunica\EventSubscriber\WebformAccessSubscriber
+    arguments:
+      - '@current_route_match'
+    tags:
+      - { name: event_subscriber }
+
