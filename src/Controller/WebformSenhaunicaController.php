@@ -50,9 +50,9 @@ final class WebformSenhaunicaController extends ControllerBase {
         ?: ($user['emailUspUsuario'] ?? ''),
     'hash' => $user['wsuserid'],
     'webform_id' => $session->get('senhaunica_webform_id'),
-    'created' => time(),
-  ])
-  ->execute();
+    'created' => date('Y-m-d H:i:s'),
+    ])
+    ->execute();
 
   return [
   '#markup' => 'Login realizado com sucesso',
