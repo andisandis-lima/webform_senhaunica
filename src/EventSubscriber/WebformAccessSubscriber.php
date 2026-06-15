@@ -53,28 +53,46 @@ class WebformAccessSubscriber implements EventSubscriberInterface {
 
     $session = $event->getRequest()->getSession();
 
+    // Armazenar o webform_id na sessão
     $session->set('senhaunica_webform_id', $webform->id());
 
-    $numero_usp = $session->get('senhaunica_loginUsuario');
+    $webform_id = $webform->id();
+
+    // Verificar se o usuário já respondeu este formulário (marcador em sessão)
+    $respondidos = $session->get('webform_senhaunica_respondidos', []);
+    if (in_array($webform_id, $respondidos)) {
+      // Remover mensagem de sucesso anterior
+      \Drupal::messenger()->deleteByType('status');
+      
+      $event->setResponse(
+        new RedirectResponse('/ja-respondeu')
+      );
+
+      return;
+    }
+
+    // Verificar se o usuário já está autenticado
+    $numero_usp = $session->get('senhaunica_numero_usp');
 
     if ($numero_usp) {
-
+      // Usuário já autenticado, verificar se já respondeu no BD
+      // (caso de nova sessão ou aba diferente)
       $ja_respondeu = \Drupal::database()
         ->select('webform_senhaunica', 'ws')
         ->fields('ws', ['id'])
         ->condition('numero_usp', $numero_usp)
-        ->condition('webform_id', $webform->id())
+        ->condition('webform_id', $webform_id)
         ->range(0, 1)
         ->execute()
         ->fetchField();
 
       if ($ja_respondeu) {
+        // Adicionar ao marcador de sessão para futuras verificações
+        $respondidos[] = $webform_id;
+        $session->set('webform_senhaunica_respondidos', $respondidos);
 
-        \Drupal::messenger()->addWarning(
-          t('Você já respondeu este formulário.')
-        );
-
-        $session = $event->getRequest()->getSession();
+        // Remover mensagem de sucesso anterior
+        \Drupal::messenger()->deleteByType('status');
 
         $event->setResponse(
           new RedirectResponse('/ja-respondeu')
@@ -82,15 +100,26 @@ class WebformAccessSubscriber implements EventSubscriberInterface {
 
         return;
       }
+
+      // Usuário autenticado e não respondeu, deixar passar
+      \Drupal::logger('webform_senhaunica')->notice(
+        'Webform @id acessado por numero_usp @usp (autorizado)',
+        ['@id' => $webform_id, '@usp' => $numero_usp]
+      );
+      return;
     }
 
+    // Usuário não autenticado, redirecionar para o callback (iniciar autenticação)
     \Drupal::logger('webform_senhaunica')->notice(
-      'Webform @id salvo na sessao',
-      ['@id' => $webform->id()]
+      'Webform @id acessado - redirecionando para autenticação',
+      ['@id' => $webform_id]
     );
 
+    // Remover mensagens anteriores antes de redirecionar
+    \Drupal::messenger()->deleteByType('status');
+
     $event->setResponse(
-      new RedirectResponse('/anderson')
+      new RedirectResponse('/callback')
     );
   }
 

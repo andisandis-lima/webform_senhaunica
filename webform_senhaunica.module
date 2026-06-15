@@ -132,6 +132,113 @@ function webform_senhaunica_form_alter(&$form, FormStateInterface $form_state, $
                 $response->send();
                 exit;
             }
+
+            // Se Senha Única está habilitado, remover mensagens automáticas do Webform
+            if ($enabled) {
+                // Remover mensagens que dizem "You have already submitted this webform"
+                $messenger = \Drupal::messenger();
+                $messages = $messenger->all();
+                
+                // Limpar mensagens do tipo webform
+                if (isset($messages['status'])) {
+                    foreach ($messages['status'] as $key => $message) {
+                        $message_text = (string) $message;
+                        if (strpos($message_text, 'already submitted') !== FALSE) {
+                            unset($messages['status'][$key]);
+                        }
+                    }
+                }
+                
+                // Remover todas as mensagens e re-adicionar apenas as que não são do webform
+                $messenger->deleteAll();
+                foreach ($messages as $type => $type_messages) {
+                    foreach ($type_messages as $message) {
+                        $messenger->addMessage($message, $type);
+                    }
+                }
+            }
         }
     }
+}
+
+/**
+ * Hook invocado após a submissão bem-sucedida de um webform.
+ * Insere o registro na tabela webform_senhaunica para rastrear respostas.
+ */
+function webform_senhaunica_webform_submission_insert(WebformSubmissionInterface $webform_submission) {
+    $webform = $webform_submission->getWebform();
+    
+    $enabled = (bool) $webform->getThirdPartySetting('webform_senhaunica', 'habilitar_senhaunica', FALSE);
+    
+    if (!$enabled) {
+        return;
+    }
+
+    $session = \Drupal::request()->getSession();
+    $numero_usp = $session->get('senhaunica_numero_usp');
+    $webform_id = $webform->id();
+
+    // Se não há numero_usp na sessão, não fazer nada
+    if (!$numero_usp) {
+        return;
+    }
+
+    $connection = \Drupal::database();
+
+    // Verificar se o numero_usp já respondeu este webform_id
+    $ja_respondeu = $connection
+        ->select('webform_senhaunica', 'ws')
+        ->fields('ws', ['id'])
+        ->condition('numero_usp', $numero_usp)
+        ->condition('webform_id', $webform_id)
+        ->range(0, 1)
+        ->execute()
+        ->fetchField();
+
+    if ($ja_respondeu) {
+        // Não deveria chegar aqui, mas por segurança, vamos verificar
+        \Drupal::logger('webform_senhaunica')->warning(
+            'Tentativa de submissão duplicada: numero_usp @usp em webform @webform',
+            ['@usp' => $numero_usp, '@webform' => $webform_id]
+        );
+        return;
+    }
+
+    // Inserir o registro na BD
+    $connection->insert('webform_senhaunica')
+        ->fields([
+            'numero_usp' => $numero_usp,
+            'nome_usuario' => $session->get('senhaunica_nome_usuario'),
+            'email' => $session->get('senhaunica_email'),
+            'hash' => $session->get('senhaunica_hash'),
+            'webform_id' => $webform_id,
+            'created' => date('Y-m-d H:i:s'),
+        ])
+        ->execute();
+
+    \Drupal::logger('webform_senhaunica')->notice(
+        'Submissão registrada: numero_usp @usp em webform @webform',
+        ['@usp' => $numero_usp, '@webform' => $webform_id]
+    );
+
+    // Limpar dados de autenticação, mas manter marcador de "já respondeu"
+    $session->remove('senhaunica_numero_usp');
+    $session->remove('senhaunica_nome_usuario');
+    $session->remove('senhaunica_email');
+    $session->remove('senhaunica_hash');
+
+    // Manter marcador de que respondeu este webform
+    $respondidos = $session->get('webform_senhaunica_respondidos', []);
+    $respondidos[] = $webform_id;
+    $session->set('webform_senhaunica_respondidos', $respondidos);
+    $session->remove('senhaunica_webform_id');
+
+    \Drupal::logger('webform_senhaunica')->notice(
+        'Marcador criado: usuário respondeu webform @webform',
+        ['@webform' => $webform_id]
+    );
+
+    \Drupal::logger('webform_senhaunica')->notice(
+        'Dados de autenticação limpos após submissão'
+    );
 }

@@ -1,0 +1,9 @@
+{
+	"servers": {
+		"sourcegraph": {
+			"type": "http",
+			"url": "https://sourcegraph.com/.api/mcp"
+		}
+	},
+	"inputs": []
+}

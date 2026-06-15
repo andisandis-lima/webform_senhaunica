@@ -6,42 +6,37 @@ namespace Drupal\webform_senhaunica\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Uspdev\Senhaunica\Senhaunica;
-use Drupal\Core\Database\Database;
 use Symfony\Component\HttpFoundation\Response;
-
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * Returns responses for Webform Senha Única routes.
  */
 final class WebformSenhaunicaController extends ControllerBase {
-    public function __invoke(): array|Response {
+  public function __invoke(): array|Response {
+    
+    Senhaunica::login();
+    $user = Senhaunica::getUserDetail();
 
-  Senhaunica::login();
-  $user = Senhaunica::getUserDetail();
+    $session = \Drupal::request()->getSession();
 
-  $session = \Drupal::request()->getSession();
+    // Armazenar dados do usuário na sessão para usar na validação
+    $session->set('senhaunica_numero_usp', $user['loginUsuario']);
+    $session->set('senhaunica_nome_usuario', $user['nomeUsuario']);
+    $session->set('senhaunica_email', ($user['emailPrincipalUsuario'] ?? '')
+      ?: ($user['emailAlternativoUsuario'] ?? '')
+      ?: ($user['emailUspUsuario'] ?? ''));
+    $session->set('senhaunica_hash', $user['wsuserid']);
 
-  $connection = Database::getConnection();
-  
-  $connection->insert('webform_senhaunica')
-  ->fields([
-    'numero_usp' => $user['loginUsuario'],
-    'nome_usuario' => $user['nomeUsuario'],
-    'email' => ($user['emailPrincipalUsuario'] ?? '')
-        ?: ($user['emailAlternativoUsuario'] ?? '')
-        ?: ($user['emailUspUsuario'] ?? ''),
-    'hash' => $user['wsuserid'],
-    'webform_id' => $session->get('senhaunica_webform_id'),
-    'created' => date('Y-m-d H:i:s'),
-    ])
-    ->execute();
+    $webform_id = $session->get('senhaunica_webform_id');
 
-  return [
-  '#markup' => 'Login realizado com sucesso',
-  '#cache' => ['max-age' => 0],
-];
-   }
+    \Drupal::messenger()->addStatus(
+      t('Login realizado com sucesso. Você pode responder o formulário.')
+    );
+
+    // Redirecionar para o webform para responder
+    return new RedirectResponse("/webform/$webform_id");
+  }
 }
 
 
