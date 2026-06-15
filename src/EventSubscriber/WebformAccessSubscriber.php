@@ -55,6 +55,35 @@ class WebformAccessSubscriber implements EventSubscriberInterface {
 
     $session->set('senhaunica_webform_id', $webform->id());
 
+    $numero_usp = $session->get('senhaunica_loginUsuario');
+
+    if ($numero_usp) {
+
+      $ja_respondeu = \Drupal::database()
+        ->select('webform_senhaunica', 'ws')
+        ->fields('ws', ['id'])
+        ->condition('numero_usp', $numero_usp)
+        ->condition('webform_id', $webform->id())
+        ->range(0, 1)
+        ->execute()
+        ->fetchField();
+
+      if ($ja_respondeu) {
+
+        \Drupal::messenger()->addWarning(
+          t('Você já respondeu este formulário.')
+        );
+
+        $session = $event->getRequest()->getSession();
+
+        $event->setResponse(
+          new RedirectResponse('/ja-respondeu')
+        );
+
+        return;
+      }
+    }
+
     \Drupal::logger('webform_senhaunica')->notice(
       'Webform @id salvo na sessao',
       ['@id' => $webform->id()]

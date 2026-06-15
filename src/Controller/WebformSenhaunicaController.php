@@ -11,34 +11,17 @@ use Symfony\Component\HttpFoundation\Response;
 
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
-
-
 /**
  * Returns responses for Webform Senha Única routes.
  */
 final class WebformSenhaunicaController extends ControllerBase {
-    public function __invoke(): array {
+    public function __invoke(): array|Response {
 
   Senhaunica::login();
+  $user = Senhaunica::getUserDetail();
 
   $session = \Drupal::request()->getSession();
 
-  $session->set('senhaunica_autenticado', TRUE);
-
-  $webform_id = $session->get('senhaunica_webform_id');
-
-  $destino = $session->get('senhaunica_destino');
-
-  if ($destino) {
-
-    $session->remove('senhaunica_destino');
-    $session->remove('senhaunica_webform_id');
-
-    return new RedirectResponse($destino);
-  }
-
-  $user = Senhaunica::getUserDetail();
-   
   $connection = Database::getConnection();
   
   $connection->insert('webform_senhaunica')
