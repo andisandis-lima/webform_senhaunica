@@ -1,0 +1,8 @@
+trava_formulario:
+  version: 1.0.0
+  js:
+    js/trava-webform.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/once

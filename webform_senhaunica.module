@@ -126,20 +126,27 @@ function webform_senhaunica_form_alter(&$form, FormStateInterface $form_state, $
             $webform = $form_object->getWebform();
             $enabled = (bool) $webform->getThirdPartySetting('webform_senhaunica', 'habilitar_senhaunica', FALSE);
 
-            if ($enabled && empty($form_state->getBuildInfo()['base_form_id'])) {
-                // Em vez de bloquear, redireciona para o controller de autenticação
-                $response = new RedirectResponse(\Drupal::url('webform_senhaunica.callback'));
-                $response->send();
-                exit;
-            }
-
-            // Se Senha Única está habilitado, remover mensagens automáticas do Webform
             if ($enabled) {
-                // Remover mensagens que dizem "You have already submitted this webform"
+                // === ADICIONA UMA CAIXA DE AVISO VISUAL NO TOPO DO FORMULÁRIO ===
+                $form['aviso_tentativa_unica'] = [
+                  '#type' => 'webform_message',
+                  '#message_type' => 'error', // Cria uma caixa vermelha de erro/alerta
+                  '#message_message' => t('<strong>Atenção:</strong> Você só pode responder a este formulário uma única vez. Se fechar ou atualizar esta aba, poderá perder seu acesso.'),
+                  '#weight' => -100, // Força a mensagem a ficar no topo de todos os campos
+                ];
+                // ==============================================================
+
+                if (empty($form_state->getBuildInfo()['base_form_id'])) {
+                    // Em vez de bloquear, redireciona para o controller de autenticação
+                    $response = new RedirectResponse(\Drupal::url('webform_senhaunica.callback'));
+                    $response->send();
+                    exit;
+                }
+
+                // Remover mensagens automáticas do Webform
                 $messenger = \Drupal::messenger();
                 $messages = $messenger->all();
                 
-                // Limpar mensagens do tipo webform
                 if (isset($messages['status'])) {
                     foreach ($messages['status'] as $key => $message) {
                         $message_text = (string) $message;
@@ -149,7 +156,6 @@ function webform_senhaunica_form_alter(&$form, FormStateInterface $form_state, $
                     }
                 }
                 
-                // Remover todas as mensagens e re-adicionar apenas as que não são do webform
                 $messenger->deleteAll();
                 foreach ($messages as $type => $type_messages) {
                     foreach ($type_messages as $message) {
@@ -160,6 +166,8 @@ function webform_senhaunica_form_alter(&$form, FormStateInterface $form_state, $
         }
     }
 }
+
+
 
 /**
  * Hook invocado após a submissão bem-sucedida de um webform.
@@ -241,4 +249,21 @@ function webform_senhaunica_webform_submission_insert(WebformSubmissionInterface
     \Drupal::logger('webform_senhaunica')->notice(
         'Dados de autenticação limpos após submissão'
     );
+}
+
+/**
+ * Implements hook_page_attachments().
+ */
+function webform_senhaunica_page_attachments(array &$attachments) {
+  // Obtém o objeto do Webform diretamente dos parâmetros da requisição atual
+  $webform = \Drupal::routeMatch()->getParameter('webform');
+  
+  // Se encontrou o Webform, valida se o recurso de senha única está ativo
+  if ($webform instanceof \Drupal\webform\WebformInterface) {
+    $enabled = (bool) $webform->getThirdPartySetting('webform_senhaunica', 'habilitar_senhaunica', FALSE);
+    if ($enabled) {
+      // Injeta a biblioteca diretamente no HTML da página
+      $attachments['#attached']['library'][] = 'webform_senhaunica/trava_formulario';
+    }
+  }
 }
