@@ -13,6 +13,9 @@ use Uspdev\Senhaunica\Senhaunica;
  * Returns responses for Webform Senha Única routes.
  */
 final class Anderson extends ControllerBase {
+   /**
+ * @return array<string, mixed>
+ */
    public function __invoke(): array {
     
     Senhaunica::logout();

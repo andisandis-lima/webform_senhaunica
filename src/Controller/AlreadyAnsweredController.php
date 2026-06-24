@@ -10,7 +10,9 @@ use Drupal\Core\Controller\ControllerBase;
  * Controller para quando o usuário já respondeu o formulário.
  */
 final class AlreadyAnsweredController extends ControllerBase {
-  
+  /**
+ * @return array<string, mixed>
+ */
   public function build(): array {
     return [
       '#type' => 'markup',
