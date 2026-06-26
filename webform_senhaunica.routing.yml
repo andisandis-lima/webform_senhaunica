@@ -22,10 +22,3 @@ webform_senhaunica.settings:
   requirements:
     _permission: 'administer site configuration'
 
-webform_senhaunica.anderson:
-  path: '/anderson'
-  defaults:
-    _title: 'Anderson'
-    _controller: '\Drupal\webform_senhaunica\Controller\Anderson'
-  requirements:
-    _permission: 'access content'
