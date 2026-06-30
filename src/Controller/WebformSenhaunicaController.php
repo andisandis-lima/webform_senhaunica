@@ -57,7 +57,6 @@ final class WebformSenhaunicaController implements ContainerInjectionInterface {
       throw new \RuntimeException('Webform ID inválido na sessão');
     }
 
-    // Redirecionar para o webform para responder
     return new RedirectResponse('/webform/' . $webform_id);
   }
 }

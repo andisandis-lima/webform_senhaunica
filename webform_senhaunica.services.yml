@@ -1,8 +1,14 @@
 services:
+  logger.channel.webform_senhaunica:
+    parent: logger.channel_base
+    arguments: ['webform_senhaunica']
+
   webform_senhaunica.webform_access_subscriber:
     class: Drupal\webform_senhaunica\EventSubscriber\WebformAccessSubscriber
     arguments:
       - '@current_route_match'
+      - '@messenger'
+      - '@database'
+      - '@logger.channel.webform_senhaunica'
     tags:
       - { name: event_subscriber }
-

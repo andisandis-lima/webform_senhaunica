@@ -7,13 +7,19 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
+use Drupal\webform\WebformInterface;
+use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\Database\Connection;
+use Drupal\Core\Logger\LoggerChannelInterface;
 
 class WebformAccessSubscriber implements EventSubscriberInterface {
 
-  protected RouteMatchInterface $routeMatch;
-
-  public function __construct(RouteMatchInterface $routeMatch) {
-    $this->routeMatch = $routeMatch;
+  public function __construct(
+    private RouteMatchInterface $routeMatch,
+    private MessengerInterface $messenger,
+    private Connection $database,
+    private LoggerChannelInterface $logger,
+  ) {
   }
 
   public static function getSubscribedEvents(): array {
@@ -37,7 +43,7 @@ class WebformAccessSubscriber implements EventSubscriberInterface {
 
     $webform = $this->routeMatch->getParameter('webform');
 
-    if (!$webform) {
+    if (!$webform instanceof WebformInterface) {
       return;
     }
 
@@ -53,17 +59,23 @@ class WebformAccessSubscriber implements EventSubscriberInterface {
 
     $session = $event->getRequest()->getSession();
 
-    // Armazenar o webform_id na sessão
     $session->set('senhaunica_webform_id', $webform->id());
 
     $webform_id = $webform->id();
 
     // Verificar se o usuário já respondeu este formulário (marcador em sessão)
     $respondidos = $session->get('webform_senhaunica_respondidos', []);
-    if (in_array($webform_id, $respondidos)) {
+
+    if (!is_array($respondidos)) {
+      $respondidos = [];
+    }
+
+    if (in_array($webform_id, $respondidos, TRUE)) {
+
       // Remover mensagem de sucesso anterior
-      \Drupal::messenger()->deleteByType('status');
-      
+
+      $this->messenger->deleteByType('status');
+
       $event->setResponse(
         new RedirectResponse('/ja-respondeu')
       );
@@ -77,7 +89,7 @@ class WebformAccessSubscriber implements EventSubscriberInterface {
     if ($numero_usp) {
       // Usuário já autenticado, verificar se já respondeu no BD
       // (caso de nova sessão ou aba diferente)
-      $ja_respondeu = \Drupal::database()
+      $ja_respondeu = $this->database
         ->select('webform_senhaunica', 'ws')
         ->fields('ws', ['id'])
         ->condition('numero_usp', $numero_usp)
@@ -101,8 +113,7 @@ class WebformAccessSubscriber implements EventSubscriberInterface {
         return;
       }
 
-      // Usuário autenticado e não respondeu, deixar passar
-      \Drupal::logger('webform_senhaunica')->notice(
+      $this->logger->notice(
         'Webform @id acessado por numero_usp @usp (autorizado)',
         ['@id' => $webform_id, '@usp' => $numero_usp]
       );
@@ -110,7 +121,7 @@ class WebformAccessSubscriber implements EventSubscriberInterface {
     }
 
     // Usuário não autenticado, redirecionar para o callback (iniciar autenticação)
-    \Drupal::logger('webform_senhaunica')->notice(
+    $this->logger->notice(
       'Webform @id acessado - redirecionando para autenticação',
       ['@id' => $webform_id]
     );
