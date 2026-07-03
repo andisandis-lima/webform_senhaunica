@@ -40,6 +40,8 @@ final class WebformSenhaunicaController implements ContainerInjectionInterface {
      * }  $user */
     $user = Senhaunica::getUserDetail();
 
+    dd($user);
+
     $session = $this->requestStack->getSession();
 
     // Armazenar dados do usuário na sessão para usar na validação

@@ -12,6 +12,8 @@ use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Logger\LoggerChannelInterface;
 
+use Uspdev\Senhaunica\Senhaunica;
+
 class WebformAccessSubscriber implements EventSubscriberInterface {
 
   public function __construct(
@@ -57,81 +59,18 @@ class WebformAccessSubscriber implements EventSubscriberInterface {
       return;
     }
 
+    // Rota para login com senha única
+    $config = \Drupal::config('webform_senhaunica.settings');
+    putenv("SENHAUNICA_BASE_URL={$config->get('url')}");
+
     $session = $event->getRequest()->getSession();
 
     $session->set('senhaunica_webform_id', $webform->id());
 
     $webform_id = $webform->id();
 
-    // Verificar se o usuário já respondeu este formulário (marcador em sessão)
-    $respondidos = $session->get('webform_senhaunica_respondidos', []);
+    Senhaunica::login();
 
-    if (!is_array($respondidos)) {
-      $respondidos = [];
-    }
-
-    if (in_array($webform_id, $respondidos, TRUE)) {
-
-      // Remover mensagem de sucesso anterior
-
-      $this->messenger->deleteByType('status');
-
-      $event->setResponse(
-        new RedirectResponse('/ja-respondeu')
-      );
-
-      return;
-    }
-
-    // Verificar se o usuário já está autenticado
-    $numero_usp = $session->get('senhaunica_numero_usp');
-
-    if ($numero_usp) {
-      // Usuário já autenticado, verificar se já respondeu no BD
-      // (caso de nova sessão ou aba diferente)
-      $ja_respondeu = $this->database
-        ->select('webform_senhaunica', 'ws')
-        ->fields('ws', ['id'])
-        ->condition('numero_usp', $numero_usp)
-        ->condition('webform_id', $webform_id)
-        ->range(0, 1)
-        ->execute()
-        ->fetchField();
-
-      if ($ja_respondeu) {
-        // Adicionar ao marcador de sessão para futuras verificações
-        $respondidos[] = $webform_id;
-        $session->set('webform_senhaunica_respondidos', $respondidos);
-
-        // Remover mensagem de sucesso anterior
-        \Drupal::messenger()->deleteByType('status');
-
-        $event->setResponse(
-          new RedirectResponse('/ja-respondeu')
-        );
-
-        return;
-      }
-
-      $this->logger->notice(
-        'Webform @id acessado por numero_usp @usp (autorizado)',
-        ['@id' => $webform_id, '@usp' => $numero_usp]
-      );
-      return;
-    }
-
-    // Usuário não autenticado, redirecionar para o callback (iniciar autenticação)
-    $this->logger->notice(
-      'Webform @id acessado - redirecionando para autenticação',
-      ['@id' => $webform_id]
-    );
-
-    // Remover mensagens anteriores antes de redirecionar
-    \Drupal::messenger()->deleteByType('status');
-
-    $event->setResponse(
-      new RedirectResponse('/callback')
-    );
   }
 
 }
