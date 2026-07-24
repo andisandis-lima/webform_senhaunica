@@ -66,10 +66,13 @@ class WebformAccessSubscriber implements EventSubscriberInterface {
     $session = $event->getRequest()->getSession();
 
     $session->set('senhaunica_webform_id', $webform->id());
-
-    $webform_id = $webform->id();
+  if ($session->has('senhaunica_hash')) {
+  return;
+}
+    $session->save();
 
     Senhaunica::login();
+    exit;
 
   }
 

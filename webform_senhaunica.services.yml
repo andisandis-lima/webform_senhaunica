@@ -12,3 +12,4 @@ services:
       - '@logger.channel.webform_senhaunica'
     tags:
       - { name: event_subscriber }
+

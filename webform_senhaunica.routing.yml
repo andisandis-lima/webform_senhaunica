@@ -6,14 +6,6 @@ webform_senhaunica.callback:
   requirements:
     _permission: 'access content'
 
-webform_senhaunica.already_answered:
-  path: '/ja-respondeu'
-  defaults:
-    _title: 'Formulário já respondido'
-    _controller: '\Drupal\webform_senhaunica\Controller\AlreadyAnsweredController::build'
-  requirements:
-    _permission: 'access content'
-
 webform_senhaunica.settings:
   path: '/admin/config/webform_senhaunica/settings'
   defaults:
