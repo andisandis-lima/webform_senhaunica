@@ -26,7 +26,7 @@ final class WebformSenhaunicaController implements ContainerInjectionInterface {
 }
   public function __invoke(): RedirectResponse {
 
-    Senhaunica::login();
+  Senhaunica::login();
 
     /**
      * @var array{
@@ -40,8 +40,6 @@ final class WebformSenhaunicaController implements ContainerInjectionInterface {
      * }  $user */
     $user = Senhaunica::getUserDetail();
 
-    dd($user);
-
     $session = $this->requestStack->getSession();
 
     // Armazenar dados do usuário na sessão para usar na validação
@@ -53,13 +51,11 @@ final class WebformSenhaunicaController implements ContainerInjectionInterface {
 
     $webform_id = $session->get('senhaunica_webform_id');
 
-    $this->messenger->addStatus('Login realizado com sucesso.');
-
     if (!is_string($webform_id) || $webform_id === '') {
       throw new \RuntimeException('Webform ID inválido na sessão');
     }
 
-    return new RedirectResponse('/webform/' . $webform_id);
+    return new RedirectResponse('/form/' . $webform_id);
   }
 }
 
