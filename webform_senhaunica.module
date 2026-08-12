@@ -37,30 +37,27 @@ function webform_senhaunica_webform_submission_insert(WebformSubmissionInterface
 
   $session = \Drupal::request()->getSession();
 
-
   // Recupera dados salvos no login da Senha Única.
   $numero_usp = $session->get('senhaunica_numero_usp');
-  $nome = $session->get('senhaunica_nome_usuario');
+  $nome = $session->get('senhaunica_nome');
   $email = $session->get('senhaunica_email');
   $hash = $session->get('senhaunica_hash');
 
 
   // Caso não exista autenticação Senha Única, não salva.
-  if (!$numero_usp) {
+  if (!$numero_usp & !$hash) {
     return;
   }
-
 
   // Salva na tabela customizada.
 \Drupal::database()
   ->insert('webform_senhaunica')
   ->fields([
     'numero_usp' => $numero_usp,
-    'nome_usuario' => $nome,
+    'nome' => $nome,
     'email' => $email,
     'hash' => $hash,
-    'webform_id' => $submission->getWebform()->id(),
-    'created' => date('Y-m-d H:i:s'),
+    'submission_id' => $submission->id()
   ])
   ->execute();
 

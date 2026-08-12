@@ -59,20 +59,32 @@ class WebformAccessSubscriber implements EventSubscriberInterface {
       return;
     }
 
-    // Rota para login com senha única
+    # A partir daqui está habilitado o recurso de senha única
     $config = \Drupal::config('webform_senhaunica.settings');
-    putenv("SENHAUNICA_BASE_URL={$config->get('url')}");
+    $session = \Drupal::request()->getSession();
 
-    $session = $event->getRequest()->getSession();
+    $numero_usp = $session->get('senhaunica_numero_usp');
+    $nome = $session->get('senhaunica_nome');
+    $email = $session->get('senhaunica_email');
+    $hash = $session->get('senhaunica_hash');
+
+    if(!empty($numero_usp) & !empty($hash)){
+      $this->messenger->addStatus("Você está logado(a) com número USP {$numero_usp} - {$nome}, {$email}. Sair");
+      # Sair: limpar a sessão 
+    }
 
     $session->set('senhaunica_webform_id', $webform->id());
-  if ($session->has('senhaunica_hash')) {
-  return;
-}
     $session->save();
 
+    if ($session->has('senhaunica_hash')) {
+      return;
+    }
+    
+    // Rota para login com senha única
+    putenv("SENHAUNICA_BASE_URL={$config->get('url')}");
     Senhaunica::login();
-    exit;
+
+    //exit;
 
   }
 

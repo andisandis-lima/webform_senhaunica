@@ -12,7 +12,7 @@ function webform_senhaunica_schema() {
         'type' => 'varchar',
         'length' => 50,
       ],
-      'nome_usuario' => [
+      'nome' => [
         'type' => 'varchar',
         'length' => 255,
       ],
@@ -24,13 +24,9 @@ function webform_senhaunica_schema() {
         'type' => 'varchar',
         'length' => 255,
       ],
-      'id_formulario' => [
+      'submission_id' => [
         'type' => 'varchar',
         'length' => 255,
-      ],
-      'created' => [
-        'type' => 'int',
-        'not null' => TRUE,
       ],
     ],
     'primary key' => ['id'],

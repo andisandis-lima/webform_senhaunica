@@ -58,6 +58,7 @@ final class SettingsForm extends ConfigFormBase {
     '#title' => $this->t('URL'),
     '#default_value' => $config->get('url'),
     '#required' => TRUE,
+    '#description' => 'http://auth.local:3141/wsusuario/oauth'
   ];
 
   return parent::buildForm($form, $form_state);

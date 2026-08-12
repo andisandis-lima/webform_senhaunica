@@ -10,6 +10,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\webform\Entity\Webform;
 
 final class WebformSenhaunicaController implements ContainerInjectionInterface {
   public function __construct(
@@ -26,7 +27,9 @@ final class WebformSenhaunicaController implements ContainerInjectionInterface {
 }
   public function __invoke(): RedirectResponse {
 
-  Senhaunica::login();
+    $config = \Drupal::config('webform_senhaunica.settings');
+    putenv("SENHAUNICA_BASE_URL={$config->get('url')}");
+    Senhaunica::login();
 
     /**
      * @var array{
@@ -36,7 +39,7 @@ final class WebformSenhaunicaController implements ContainerInjectionInterface {
      *   emailAlternativoUsuario?: string,
      *   emailUspUsuario?: string,
      *   wsuserid: string,
-     *   webform_id: string
+     *   submission_id: string
      * }  $user */
     $user = Senhaunica::getUserDetail();
 
@@ -44,7 +47,7 @@ final class WebformSenhaunicaController implements ContainerInjectionInterface {
 
     // Armazenar dados do usuário na sessão para usar na validação
     $session->set('senhaunica_numero_usp', $user['loginUsuario']);
-    $session->set('senhaunica_nome_usuario', $user['nomeUsuario']);
+    $session->set('senhaunica_nome', $user['nomeUsuario']);
     $session->set('senhaunica_email', $user['emailPrincipalUsuario'] ?? $user['emailAlternativoUsuario']
       ?? $user['emailUspUsuario'] ?? '');
     $session->set('senhaunica_hash', $user['wsuserid']);
@@ -55,7 +58,9 @@ final class WebformSenhaunicaController implements ContainerInjectionInterface {
       throw new \RuntimeException('Webform ID inválido na sessão');
     }
 
-    return new RedirectResponse('/form/' . $webform_id);
+    $webform = Webform::load($webform_id);
+    $url = $webform->toUrl()->toString();
+    return new RedirectResponse($url);
   }
 }
 
