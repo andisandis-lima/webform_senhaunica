@@ -39,18 +39,4 @@ function webform_senhaunica_schema() {
   return $schema;
 }
 
-/**
- * Cria a tabela para instalações já existentes.
- */
-function webform_senhaunica_update_9001() {
-  $schema = \Drupal::database()->schema();
 
-  if (!$schema->tableExists('webform_senhaunica')) {
-    $tables = webform_senhaunica_schema();
-
-    $schema->createTable(
-      'webform_senhaunica',
-      $tables['webform_senhaunica']
-    );
-  }
-}
