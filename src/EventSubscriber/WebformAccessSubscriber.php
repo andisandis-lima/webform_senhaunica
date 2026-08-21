@@ -100,6 +100,7 @@ class WebformAccessSubscriber implements EventSubscriberInterface {
 
     // Rota para login com senha única
     putenv("SENHAUNICA_BASE_URL={$config->get('url')}");
+    putenv("SENHAUNICA_CALLBACK_ID={$config->get('callback_id')}");
     Senhaunica::login();
 
     //exit;

@@ -72,7 +72,7 @@ final class WebformSenhaunicaController implements ContainerInjectionInterface {
     $config = \Drupal::config('webform_senhaunica.settings');
 
     putenv("SENHAUNICA_BASE_URL={$config->get('url')}");
-
+    putenv("SENHAUNICA_CALLBACK_ID={$config->get('callback_id')}");
     Senhaunica::login();
 
     /**
@@ -104,9 +104,9 @@ final class WebformSenhaunicaController implements ContainerInjectionInterface {
     $session->set(
       'senhaunica_email',
       $user['emailPrincipalUsuario']
-        ?? $user['emailAlternativoUsuario']
-        ?? $user['emailUspUsuario']
-        ?? ''
+      ?? $user['emailAlternativoUsuario']
+      ?? $user['emailUspUsuario']
+      ?? ''
     );
 
     $session->set(
@@ -138,36 +138,36 @@ final class WebformSenhaunicaController implements ContainerInjectionInterface {
   /**
    * Logout da Senha Única.
    */
-public function logout(): RedirectResponse {
+  public function logout(): RedirectResponse {
 
-  $session = $this->requestStack->getSession();
+    $session = $this->requestStack->getSession();
 
-  Senhaunica::logout();
+    Senhaunica::logout();
 
-  // Guarda o Webform atual.
-  $webform_id = $session->get('senhaunica_webform_id');
+    // Guarda o Webform atual.
+    $webform_id = $session->get('senhaunica_webform_id');
 
-  // Faz logout da sessão própria da Senha Única.
-  Senhaunica::logout();
+    // Faz logout da sessão própria da Senha Única.
+    Senhaunica::logout();
 
-  // Limpa os dados da Senha Única armazenados pelo Drupal.
-  $session->remove('senhaunica_numero_usp');
-  $session->remove('senhaunica_nome');
-  $session->remove('senhaunica_email');
-  $session->remove('senhaunica_hash');
+    // Limpa os dados da Senha Única armazenados pelo Drupal.
+    $session->remove('senhaunica_numero_usp');
+    $session->remove('senhaunica_nome');
+    $session->remove('senhaunica_email');
+    $session->remove('senhaunica_hash');
 
-  // Mantém o Webform para o próximo login.
-  if (is_string($webform_id) && $webform_id !== '') {
-    $session->set('senhaunica_webform_id', $webform_id);
+    // Mantém o Webform para o próximo login.
+    if (is_string($webform_id) && $webform_id !== '') {
+      $session->set('senhaunica_webform_id', $webform_id);
+    }
+
+    $session->save();
+
+    // Mostra a tela para entrar novamente.
+    $url = Url::fromRoute(
+      'webform_senhaunica.login'
+    )->toString();
+
+    return new RedirectResponse($url);
   }
-
-  $session->save();
-
-  // Mostra a tela para entrar novamente.
-  $url = Url::fromRoute(
-    'webform_senhaunica.login'
-  )->toString();
-
-  return new RedirectResponse($url);
-}
 }
