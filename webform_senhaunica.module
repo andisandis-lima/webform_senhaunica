@@ -28,8 +28,106 @@ function webform_senhaunica_webform_third_party_settings_form_alter(array &$form
   ];
 
 }
+function webform_senhaunica_form_alter(
+  array &$form,
+  FormStateInterface $form_state,
+  $form_id
+) {
 
+  if ($form_id !== 'webform_submission_a_add_form') {
+    return;
+  }
 
+  $session = \Drupal::request()->getSession();
+
+  $numero_usp = $session->get('senhaunica_numero_usp');
+
+  if (empty($numero_usp)) {
+    return;
+  }
+
+  /*
+   * Verifica se este usuário já respondeu.
+   */
+  $existe = \Drupal::database()
+    ->select('webform_senhaunica', 'w')
+    ->condition('w.numero_usp', $numero_usp)
+    ->countQuery()
+    ->execute()
+    ->fetchField();
+
+  if ((int) $existe > 0) {
+
+    /*
+     * Impede o envio do formulário.
+     */
+    $form['#validate'][] = 'webform_senhaunica_validate_submission';
+
+    /*
+     * Mostra a mensagem imediatamente.
+     */
+    \Drupal::messenger()->addError(
+      t('Você já respondeu este formulário. Não é possível enviar uma nova resposta.')
+    );
+
+    /*
+     * Opcional: desabilita o botão de envio.
+     */
+    if (isset($form['actions']['submit'])) {
+      $form['actions']['submit']['#disabled'] = TRUE;
+    }
+
+    return;
+  }
+
+  /*
+   * Usuário ainda não respondeu:
+   * mantém a validação normal para impedir
+   * uma segunda resposta caso haja concorrência.
+   */
+  $form['#validate'][] = 'webform_senhaunica_validate_submission';
+}
+
+function webform_senhaunica_validate_submission(
+  array &$form,
+  FormStateInterface $form_state
+) {
+
+  $session = \Drupal::request()->getSession();
+
+  $numero_usp = $session->get('senhaunica_numero_usp');
+
+  if (empty($numero_usp)) {
+    $form_state->setErrorByName(
+      '',
+      t('Não foi possível identificar seu número USP. Faça login novamente.')
+    );
+
+    return;
+  }
+
+  $existe = \Drupal::database()
+    ->select('webform_senhaunica', 'w')
+    ->condition('w.numero_usp', $numero_usp)
+    ->countQuery()
+    ->execute()
+    ->fetchField();
+
+  if ((int) $existe > 0) {
+
+    $form_state->setErrorByName(
+      '',
+      t('Você já respondeu este formulário. Não é possível enviar uma nova resposta.')
+    );
+
+    \Drupal::logger('webform_senhaunica')->notice(
+      'Segunda resposta bloqueada para o usuário @usp.',
+      [
+        '@usp' => $numero_usp,
+      ]
+    );
+  }
+}
 /**
  * Salva os dados da Senha Única quando o Webform é enviado.
  */
@@ -50,16 +148,16 @@ function webform_senhaunica_webform_submission_insert(WebformSubmissionInterface
   }
 
   // Salva na tabela customizada.
-\Drupal::database()
-  ->insert('webform_senhaunica')
-  ->fields([
-    'numero_usp' => $numero_usp,
-    'nome' => $nome,
-    'email' => $email,
-    'hash' => $hash,
-    'submission_id' => $submission->id()
-  ])
-  ->execute();
+  \Drupal::database()
+    ->insert('webform_senhaunica')
+    ->fields([
+      'numero_usp' => $numero_usp,
+      'nome' => $nome,
+      'email' => $email,
+      'hash' => $hash,
+      'submission_id' => $submission->id()
+    ])
+    ->execute();
 
 
   \Drupal::logger('webform_senhaunica')->notice(

@@ -4,13 +4,14 @@ namespace Drupal\webform_senhaunica\EventSubscriber;
 
 use Drupal\Core\Routing\RouteMatchInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Drupal\webform\WebformInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Logger\LoggerChannelInterface;
+use Drupal\Core\Link;
+use Drupal\Core\Url;
 
 use Uspdev\Senhaunica\Senhaunica;
 
@@ -68,9 +69,26 @@ class WebformAccessSubscriber implements EventSubscriberInterface {
     $email = $session->get('senhaunica_email');
     $hash = $session->get('senhaunica_hash');
 
-    if(!empty($numero_usp) & !empty($hash)){
-      $this->messenger->addStatus("Você está logado(a) com número USP {$numero_usp} - {$nome}, {$email}. Sair");
-      # Sair: limpar a sessão 
+    if (!empty($numero_usp) && !empty($hash)) {
+
+      $logout_url = Url::fromRoute('webform_senhaunica.logout');
+
+      $logout_link = Link::fromTextAndUrl(
+        'Sair',
+        $logout_url
+      )->toRenderable();
+
+      $logout_link['#attributes'] = [
+        'class' => [
+          'button--logout',
+        ],
+      ];
+
+      $this->messenger->addStatus([
+        '#markup' => "Você está logado(a) com número USP {$numero_usp} - {$nome}, {$email}. ",
+      ]);
+
+      $this->messenger->addStatus($logout_link);
     }
 
     $session->set('senhaunica_webform_id', $webform->id());
@@ -79,9 +97,10 @@ class WebformAccessSubscriber implements EventSubscriberInterface {
     if ($session->has('senhaunica_hash')) {
       return;
     }
-    
+
     // Rota para login com senha única
     putenv("SENHAUNICA_BASE_URL={$config->get('url')}");
+    putenv("SENHAUNICA_CALLBACK_ID={$config->get('callback_id')}");
     Senhaunica::login();
 
     //exit;

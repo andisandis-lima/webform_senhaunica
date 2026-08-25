@@ -6,6 +6,7 @@ webform_senhaunica.callback:
   requirements:
     _permission: 'access content'
 
+
 webform_senhaunica.settings:
   path: '/admin/config/webform_senhaunica/settings'
   defaults:
@@ -14,3 +15,20 @@ webform_senhaunica.settings:
   requirements:
     _permission: 'administer site configuration'
 
+
+webform_senhaunica.logout:
+  path: '/senhaunica/logout'
+  defaults:
+    _controller: '\Drupal\webform_senhaunica\Controller\WebformSenhaunicaController::logout'
+    _title: 'Sair'
+  requirements:
+    _access: 'TRUE'
+
+
+webform_senhaunica.login:
+  path: '/senhaunica/login'
+  defaults:
+    _controller: '\Drupal\webform_senhaunica\Controller\WebformSenhaunicaController::login'
+    _title: 'Login Senha Única'
+  requirements:
+    _access: 'TRUE'
