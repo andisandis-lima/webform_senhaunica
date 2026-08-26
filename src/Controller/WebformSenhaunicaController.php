@@ -71,8 +71,15 @@ final class WebformSenhaunicaController implements ContainerInjectionInterface {
 
     $config = \Drupal::config('webform_senhaunica.settings');
 
-    putenv("SENHAUNICA_BASE_URL={$config->get('url')}");
-    putenv("SENHAUNICA_CALLBACK_ID={$config->get('callback_id')}");
+    $identifier = trim($config->get('identifier'));
+    $secret = trim($config->get('secret'));
+    $url = trim($config->get('url'));
+    $callback_id = trim($config->get('callback_id'));
+
+    putenv("SENHAUNICA_KEY={$identifier}");
+    putenv("SENHAUNICA_SECRET={$secret}");
+    putenv("SENHAUNICA_BASE_URL={$url}");
+    putenv("SENHAUNICA_CALLBACK_ID={$callback_id}");
     Senhaunica::login();
 
     /**

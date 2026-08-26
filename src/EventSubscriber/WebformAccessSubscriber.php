@@ -74,7 +74,7 @@ class WebformAccessSubscriber implements EventSubscriberInterface {
       $logout_url = Url::fromRoute('webform_senhaunica.logout');
 
       $logout_link = Link::fromTextAndUrl(
-        'Sair',
+        "Não sou {$nome}, desejo sair!",
         $logout_url
       )->toRenderable();
 
@@ -85,7 +85,7 @@ class WebformAccessSubscriber implements EventSubscriberInterface {
       ];
 
       $this->messenger->addStatus([
-        '#markup' => "Você está logado(a) com número USP {$numero_usp} - {$nome}, {$email}. ",
+        '#markup' => "Você foi identificado(a) como {$nome}, número USP {$numero_usp} e e-mail {$email}. ",
       ]);
 
       $this->messenger->addStatus($logout_link);
@@ -99,8 +99,15 @@ class WebformAccessSubscriber implements EventSubscriberInterface {
     }
 
     // Rota para login com senha única
-    putenv("SENHAUNICA_BASE_URL={$config->get('url')}");
-    putenv("SENHAUNICA_CALLBACK_ID={$config->get('callback_id')}");
+    $identifier = trim($config->get('identifier'));
+    $secret = trim($config->get('secret'));
+    $url = trim($config->get('url'));
+    $callback_id = trim($config->get('callback_id'));
+
+    putenv("SENHAUNICA_KEY={$identifier}");
+    putenv("SENHAUNICA_SECRET={$secret}");
+    putenv("SENHAUNICA_BASE_URL={$url}");
+    putenv("SENHAUNICA_CALLBACK_ID={$callback_id}");
     Senhaunica::login();
 
     //exit;

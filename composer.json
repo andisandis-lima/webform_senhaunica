@@ -1,0 +1,16 @@
+{
+    "name": "uspdev/webform_senhaunica",
+    "description": "Restringe acesso ao webform para usuários logados com senha única USP",
+    "type": "drupal-module",
+    "license": "GPL-2.0-or-later",
+    "require": {
+        "uspdev/senhaunica": "^2.0.5",
+        "drupal/webform": "^6"
+    },
+    "authors": [
+        {
+            "name": "Thiago Gomes Verissimo",
+            "email": "verissimotgv@gmail.com"
+        }
+    ]
+}
